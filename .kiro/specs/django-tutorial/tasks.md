@@ -20,6 +20,7 @@
 
 
 
+
 - [x] 2.1 Write Django introduction and setup guide
 
 
