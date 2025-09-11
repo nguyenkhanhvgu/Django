@@ -1,0 +1,258 @@
+<!-- Django Architecture Demo - Post List Template -->
+<!-- This template demonstrates template inheritance, loops, conditionals, and pagination -->
+
+{% extends 'blog/base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
+
+{% block meta_description %}Browse our latest blog posts about Django development and web programming.{% endblock %}
+
+{% block breadcrumb_items %}
+    <li class="breadcrumb-item active" aria-current="page">Posts</li>
+{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ page_title }}</h1>
+        {% if user.is_authenticated %}
+            <a href="{% url 'blog:post_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Post
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Filter information -->
+    {% if current_category or current_tag or search_query %}
+        <div class="alert alert-info">
+            <strong>Filtered by:</strong>
+            {% if current_category %}
+                Category: <span class="badge bg-secondary">{{ categories|first.name }}</span>
+            {% endif %}
+            {% if current_tag %}
+                Tag: <span class="badge bg-primary">{{ tags|first.name }}</span>
+            {% endif %}
+            {% if search_query %}
+                Search: "<em>{{ search_query }}</em>"
+            {% endif %}
+            <a href="{% url 'blog:post_list' %}" class="btn btn-sm btn-outline-secondary ms-2">
+                Clear Filters
+            </a>
+        </div>
+    {% endif %}
+
+    <!-- Posts list -->
+    {% if page_obj %}
+        <div class="row">
+            {% for post in page_obj %}
+                <div class="col-md-6 mb-4">
+                    <article class="card h-100">
+                        <!-- Featured badge -->
+                        {% if post.featured %}
+                            <div class="position-absolute top-0 start-0 m-2">
+                                <span class="badge bg-warning text-dark">Featured</span>
+                            </div>
+                        {% endif %}
+
+                        <div class="card-body d-flex flex-column">
+                            <!-- Post title -->
+                            <h5 class="card-title">
+                                <a href="{% url 'blog:post_detail' post.slug %}" 
+                                   class="text-decoration-none">
+                                    {{ post.title }}
+                                </a>
+                            </h5>
+
+                            <!-- Post meta -->
+                            <div class="text-muted small mb-3">
+                                <i class="fas fa-user"></i> {{ post.author.username }}
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-calendar"></i> {{ post.created_at|date:"M d, Y" }}
+                                {% if post.category %}
+                                    <span class="mx-2">•</span>
+                                    <i class="fas fa-folder"></i>
+                                    <a href="{% url 'blog:category_detail' post.category.pk %}" 
+                                       class="text-muted text-decoration-none">
+                                        {{ post.category.name }}
+                                    </a>
+                                {% endif %}
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-eye"></i> {{ post.view_count }} views
+                            </div>
+
+                            <!-- Post excerpt -->
+                            <p class="card-text flex-grow-1">
+                                {% if post.excerpt %}
+                                    {{ post.excerpt }}
+                                {% else %}
+                                    {{ post.content|truncatewords:30 }}
+                                {% endif %}
+                            </p>
+
+                            <!-- Post tags -->
+                            {% if post.tags.all %}
+                                <div class="mb-3">
+                                    {% for tag in post.tags.all %}
+                                        <a href="{% url 'blog:posts_by_tag' tag.id %}" 
+                                           class="badge text-decoration-none me-1"
+                                           style="background-color: {{ tag.color }};">
+                                            {{ tag.name }}
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <!-- Post footer -->
+                            <div class="d-flex justify-content-between align-items-center mt-auto">
+                                <div class="text-muted small">
+                                    <i class="fas fa-clock"></i> {{ post.reading_time }} min read
+                                    <span class="mx-2">•</span>
+                                    <i class="fas fa-comment"></i> {{ post.comments.count }} comments
+                                </div>
+                                <a href="{% url 'blog:post_detail' post.slug %}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    Read More
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+
+                <!-- Add a row break every 2 posts -->
+                {% if forloop.counter|divisibleby:2 %}
+                    </div><div class="row">
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+            <nav aria-label="Posts pagination" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <!-- Previous page -->
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.tag %}&tag={{ request.GET.tag }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                &laquo; First
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.tag %}&tag={{ request.GET.tag }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                &lsaquo; Previous
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <!-- Page numbers -->
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.tag %}&tag={{ request.GET.tag }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Next page -->
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.tag %}&tag={{ request.GET.tag }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                Next &rsaquo;
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.tag %}&tag={{ request.GET.tag }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                Last &raquo;
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <!-- Pagination info -->
+            <div class="text-center text-muted">
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} 
+                of {{ page_obj.paginator.count }} posts
+            </div>
+        {% endif %}
+
+    {% else %}
+        <!-- No posts message -->
+        <div class="text-center py-5">
+            <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+            <h3 class="text-muted">No Posts Found</h3>
+            <p class="text-muted">
+                {% if search_query %}
+                    No posts match your search criteria.
+                {% elif current_category or current_tag %}
+                    No posts found in this category/tag.
+                {% else %}
+                    There are no published posts yet.
+                {% endif %}
+            </p>
+            {% if user.is_authenticated %}
+                <a href="{% url 'blog:post_create' %}" class="btn btn-primary">
+                    Create the First Post
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block template_name %}post_list.html{% endblock %}
+
+<!-- 
+Template Features Demonstrated:
+
+1. Template Inheritance:
+   - {% extends 'blog/base.html' %} - Inherit from base template
+   - {% block title %} - Override title block
+   - {{ block.super }} - Include parent block content
+
+2. Template Tags:
+   - {% load static %} - Load static files functionality
+   - {% if %} / {% elif %} / {% else %} / {% endif %} - Conditional logic
+   - {% for %} / {% empty %} / {% endfor %} - Loops with empty handling
+   - {% url 'name' param %} - URL generation with parameters
+
+3. Template Filters:
+   - {{ post.created_at|date:"M d, Y" }} - Date formatting
+   - {{ post.content|truncatewords:30 }} - Text truncation
+   - {{ forloop.counter|divisibleby:2 }} - Mathematical operations
+   - {{ page_obj.number|add:'-3' }} - Arithmetic in templates
+
+4. Template Variables:
+   - {{ post.title }} - Simple variable output
+   - {{ post.author.username }} - Related object access
+   - {{ post.tags.all }} - Related manager access
+   - {{ forloop.counter }} - Loop counter
+
+5. Context Data Usage:
+   - page_obj - Paginated queryset
+   - current_category - Filter state
+   - search_query - Search parameters
+   - user - Current user object
+
+6. URL Generation:
+   - {% url 'blog:post_detail' post.slug %} - Named URLs with parameters
+   - Preserving GET parameters in pagination links
+   - App namespacing (blog:view_name)
+
+7. Conditional Rendering:
+   - Show/hide elements based on user authentication
+   - Display different content based on data availability
+   - Featured post badges
+   - Empty state handling
+
+8. Template Comments:
+   - {# This is a comment #} - Template comments
+   - <!-- HTML comments --> - HTML comments
+
+This template demonstrates a complete, production-ready post listing page
+with filtering, pagination, and responsive design.
+-->
