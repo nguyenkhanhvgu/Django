@@ -1,0 +1,218 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Profile - Authentication System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Update Profile</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <h5 class="mb-3">Personal Information</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ u_form.username.id_for_label }}" class="form-label">Username</label>
+                            {{ u_form.username }}
+                            {% if u_form.username.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in u_form.username.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ u_form.email.id_for_label }}" class="form-label">Email</label>
+                            {{ u_form.email }}
+                            {% if u_form.email.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in u_form.email.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ u_form.first_name.id_for_label }}" class="form-label">First Name</label>
+                            {{ u_form.first_name }}
+                            {% if u_form.first_name.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in u_form.first_name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ u_form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                            {{ u_form.last_name }}
+                            {% if u_form.last_name.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in u_form.last_name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h5 class="mb-3">Profile Details</h5>
+                    <div class="mb-3">
+                        <label for="{{ p_form.bio.id_for_label }}" class="form-label">Bio</label>
+                        {{ p_form.bio }}
+                        {% if p_form.bio.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in p_form.bio.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Tell us a little about yourself (optional)</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ p_form.location.id_for_label }}" class="form-label">Location</label>
+                            {{ p_form.location }}
+                            {% if p_form.location.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in p_form.location.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ p_form.birth_date.id_for_label }}" class="form-label">Birth Date</label>
+                            {{ p_form.birth_date }}
+                            {% if p_form.birth_date.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in p_form.birth_date.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ p_form.phone_number.id_for_label }}" class="form-label">Phone Number</label>
+                            {{ p_form.phone_number }}
+                            {% if p_form.phone_number.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in p_form.phone_number.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ p_form.website.id_for_label }}" class="form-label">Website</label>
+                            {{ p_form.website }}
+                            {% if p_form.website.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in p_form.website.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="{{ p_form.avatar.id_for_label }}" class="form-label">Profile Picture</label>
+                        <div class="input-group">
+                            {{ p_form.avatar }}
+                        </div>
+                        {% if p_form.avatar.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in p_form.avatar.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Upload a profile picture (optional). Images will be resized to 300x300 pixels.</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex">
+                        <button type="submit" class="btn btn-primary me-md-2">Update Profile</button>
+                        <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Current Profile</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if user.userprofile.avatar %}
+                    <img src="{{ user.userprofile.avatar.url }}" class="avatar-large mb-3" alt="Current Avatar">
+                {% else %}
+                    <div class="avatar-large mb-3 bg-secondary d-flex align-items-center justify-content-center text-white fs-1 mx-auto">
+                        {{ user.username|first|upper }}
+                    </div>
+                {% endif %}
+                
+                <h6>{{ user.get_full_name|default:user.username }}</h6>
+                <p class="text-muted">{{ user.email }}</p>
+                
+                {% if user.userprofile.bio %}
+                    <p class="small">{{ user.userprofile.bio|truncatewords:20 }}</p>
+                {% endif %}
+                
+                {% if user.userprofile.location %}
+                    <p class="small text-muted">
+                        <i class="bi bi-geo-alt"></i> {{ user.userprofile.location }}
+                    </p>
+                {% endif %}
+                
+                {% if user.userprofile.website %}
+                    <p class="small">
+                        <a href="{{ user.userprofile.website }}" target="_blank" class="text-decoration-none">
+                            <i class="bi bi-globe"></i> Visit Website
+                        </a>
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Profile Completion</h6>
+            </div>
+            <div class="card-body">
+                {% with completion=0 %}
+                    {% if user.first_name %}{% with completion=completion|add:20 %}{% endwith %}{% endif %}
+                    {% if user.userprofile.bio %}{% with completion=completion|add:20 %}{% endwith %}{% endif %}
+                    {% if user.userprofile.location %}{% with completion=completion|add:20 %}{% endwith %}{% endif %}
+                    {% if user.userprofile.avatar and user.userprofile.avatar.name != 'default.jpg' %}{% with completion=completion|add:20 %}{% endwith %}{% endif %}
+                    {% if user.userprofile.phone_number %}{% with completion=completion|add:20 %}{% endwith %}{% endif %}
+                    
+                    <div class="progress mb-2">
+                        <div class="progress-bar" role="progressbar" style="width: {{ completion }}%" 
+                             aria-valuenow="{{ completion }}" aria-valuemin="0" aria-valuemax="100">
+                            {{ completion }}%
+                        </div>
+                    </div>
+                    <small class="text-muted">Complete your profile to help others connect with you</small>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
