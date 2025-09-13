@@ -1,0 +1,449 @@
+name: Django Comprehensive Testing
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DJANGO_SETTINGS_MODULE: blog_project.settings.test
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.8, 3.9, '3.10', '3.11']
+        django-version: [3.2, 4.0, 4.1, 4.2]
+        exclude:
+          # Django 4.0+ requires Python 3.8+
+          - python-version: 3.7
+            django-version: 4.0
+          - python-version: 3.7
+            django-version: 4.1
+          - python-version: 3.7
+            django-version: 4.2
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_blog_db
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:6-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+          ${{ runner.os }}-pip-
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql-client
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install Django==${{ matrix.django-version }}
+        pip install -r requirements.txt
+    
+    - name: Verify database connection
+      run: |
+        pg_isready -h localhost -p 5432 -U postgres
+      env:
+        PGPASSWORD: postgres
+    
+    - name: Run database migrations
+      run: |
+        python manage.py migrate --verbosity=2
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_blog_db
+        REDIS_URL: redis://localhost:6379/0
+    
+    - name: Collect static files
+      run: |
+        python manage.py collectstatic --noinput --verbosity=2
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_blog_db
+        REDIS_URL: redis://localhost:6379/0
+    
+    - name: Run unit tests
+      run: |
+        coverage run --source='.' --omit='*/venv/*,*/migrations/*,manage.py,*/settings/*,*/tests/*' manage.py test tests.unit --verbosity=2
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_blog_db
+        REDIS_URL: redis://localhost:6379/0
+    
+    - name: Run integration tests
+      run: |
+        coverage run --append --source='.' --omit='*/venv/*,*/migrations/*,manage.py,*/settings/*,*/tests/*' manage.py test tests.integration --verbosity=2
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_blog_db
+        REDIS_URL: redis://localhost:6379/0
+    
+    - name: Generate coverage report
+      run: |
+        coverage report --show-missing
+        coverage xml
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-lint-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-lint-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 black isort mypy
+        pip install -r requirements.txt
+    
+    - name: Run Black (code formatting)
+      run: |
+        black --check --diff .
+    
+    - name: Run isort (import sorting)
+      run: |
+        isort --check-only --diff .
+    
+    - name: Run flake8 (linting)
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+    
+    - name: Run mypy (type checking)
+      run: |
+        mypy . --ignore-missing-imports --no-strict-optional
+      continue-on-error: true
+
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety
+        pip install -r requirements.txt
+    
+    - name: Run Bandit (security linting)
+      run: |
+        bandit -r . -x tests/ -f json -o bandit-report.json
+      continue-on-error: true
+    
+    - name: Run Safety (dependency vulnerability check)
+      run: |
+        safety check --json --output safety-report.json
+      continue-on-error: true
+    
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+
+  functional-tests:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_blog_db
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Set up Chrome
+      uses: browser-actions/setup-chrome@latest
+    
+    - name: Set up ChromeDriver
+      uses: nanasess/setup-chromedriver@v2
+    
+    - name: Run database migrations
+      run: |
+        python manage.py migrate
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_blog_db
+    
+    - name: Create test data
+      run: |
+        python manage.py shell -c "
+        from factories import create_blog_data
+        create_blog_data(users=5, categories=3, posts_per_category=5, comments_per_post=2, tags=10)
+        print('Test data created successfully')
+        "
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_blog_db
+    
+    - name: Run functional tests
+      run: |
+        python manage.py test tests.functional --verbosity=2
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_blog_db
+        SELENIUM_BROWSER: chrome
+        HEADLESS: true
+    
+    - name: Upload screenshots on failure
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: selenium-screenshots
+        path: screenshots/
+
+  performance-tests:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_blog_db
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:6-alpine
+        ports:
+          - 6379:6379
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install django-debug-toolbar locust
+    
+    - name: Run database migrations
+      run: |
+        python manage.py migrate
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_blog_db
+        REDIS_URL: redis://localhost:6379/0
+    
+    - name: Create performance test data
+      run: |
+        python manage.py shell -c "
+        from factories import create_performance_test_data
+        create_performance_test_data()
+        print('Performance test data created')
+        "
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_blog_db
+        REDIS_URL: redis://localhost:6379/0
+    
+    - name: Run performance tests
+      run: |
+        python manage.py test tests.performance --verbosity=2
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_blog_db
+        REDIS_URL: redis://localhost:6379/0
+    
+    - name: Run load tests with Locust
+      run: |
+        # Start Django development server in background
+        python manage.py runserver 8000 &
+        SERVER_PID=$!
+        
+        # Wait for server to start
+        sleep 10
+        
+        # Run Locust load test
+        locust -f tests/load_tests.py --headless --users 10 --spawn-rate 2 --run-time 60s --host http://localhost:8000 --html locust_report.html
+        
+        # Stop server
+        kill $SERVER_PID
+      env:
+        DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_blog_db
+        REDIS_URL: redis://localhost:6379/0
+    
+    - name: Upload performance reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-reports
+        path: |
+          locust_report.html
+
+  build-and-test-docker:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Build Docker image
+      run: |
+        docker build -t blog-app:test .
+    
+    - name: Run tests in Docker
+      run: |
+        docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
+    
+    - name: Clean up Docker
+      run: |
+        docker-compose -f docker-compose.test.yml down -v
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [test, lint, security, functional-tests]
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment"
+        # Add your staging deployment commands here
+        # Example: deploy to Heroku, AWS, etc.
+    
+    - name: Run smoke tests on staging
+      run: |
+        echo "Running smoke tests on staging"
+        # Add smoke tests for staging environment
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [test, lint, security, functional-tests, performance-tests]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production environment"
+        # Add your production deployment commands here
+      # Only run on manual approval
+      environment: production
+    
+    - name: Run smoke tests on production
+      run: |
+        echo "Running smoke tests on production"
+        # Add smoke tests for production environment
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [test, lint, security, functional-tests]
+    if: always()
+    
+    steps:
+    - name: Notify on success
+      if: ${{ needs.test.result == 'success' && needs.lint.result == 'success' }}
+      run: |
+        echo "All tests passed! 🎉"
+        # Add notification logic (Slack, email, etc.)
+    
+    - name: Notify on failure
+      if: ${{ needs.test.result == 'failure' || needs.lint.result == 'failure' }}
+      run: |
+        echo "Tests failed! 😞"
+        # Add failure notification logic

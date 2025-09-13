@@ -1,0 +1,50 @@
+# Production requirements for Django deployment
+
+# Django and core dependencies
+Django>=4.2,<5.0
+psycopg2-binary>=2.9.7
+
+# WSGI server
+gunicorn>=21.2.0
+
+# Static files handling
+whitenoise>=6.5.0
+
+# Environment variables
+python-decouple>=3.8
+
+# Database URL parsing
+dj-database-url>=2.1.0
+
+# Redis cache
+django-redis>=5.3.0
+redis>=4.6.0
+
+# Security and CORS
+django-cors-headers>=4.2.0
+django-csp>=3.7
+
+# AWS integration (optional)
+boto3>=1.28.0
+django-storages>=1.14.0
+
+# Monitoring and logging
+sentry-sdk>=1.32.0
+
+# Background tasks (optional)
+celery>=5.3.0
+
+# API framework (if using DRF)
+djangorestframework>=3.14.0
+
+# Authentication (optional)
+djangorestframework-simplejwt>=5.3.0
+
+# Image processing (if handling images)
+Pillow>=10.0.0
+
+# Development tools (for production debugging)
+django-extensions>=3.2.0
+
+# Health checks
+django-health-check>=3.17.0

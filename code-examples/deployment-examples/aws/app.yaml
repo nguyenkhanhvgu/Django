@@ -1,0 +1,91 @@
+# DigitalOcean App Platform Configuration
+name: django-app
+services:
+- name: web
+  source_dir: /
+  github:
+    repo: your-username/your-django-repo
+    branch: main
+    deploy_on_push: true
+  
+  # Build configuration
+  build_command: |
+    pip install -r requirements/production.txt
+    python manage.py collectstatic --noinput
+  
+  # Run configuration
+  run_command: gunicorn --worker-tmp-dir /dev/shm --workers 2 --bind 0.0.0.0:8080 myproject.wsgi:application
+  
+  # Environment configuration
+  environment_slug: python
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  
+  # Health check
+  health_check:
+    http_path: /health/
+    initial_delay_seconds: 30
+    period_seconds: 10
+    timeout_seconds: 5
+    success_threshold: 1
+    failure_threshold: 3
+  
+  # Environment variables
+  envs:
+  - key: DEBUG
+    value: "False"
+  - key: DJANGO_SETTINGS_MODULE
+    value: myproject.settings.production
+  - key: SECRET_KEY
+    value: ${SECRET_KEY}
+    type: SECRET
+  - key: ALLOWED_HOSTS
+    value: ${_self.DOMAIN}
+  - key: DATABASE_URL
+    value: ${db.DATABASE_URL}
+  - key: REDIS_URL
+    value: ${redis.REDIS_URL}
+  
+  # HTTP configuration
+  http_port: 8080
+  routes:
+  - path: /
+  
+  # Resource limits
+  cpu_kind: shared
+  cpus: 0.5
+  memory: 1GB
+
+# Database configuration
+databases:
+- name: db
+  engine: PG
+  version: "15"
+  size: basic-xs
+  num_nodes: 1
+
+# Redis configuration  
+services:
+- name: redis
+  image:
+    registry_type: DOCR
+    registry: registry.digitalocean.com
+    repository: redis
+    tag: "7-alpine"
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  
+# Static files (if using CDN)
+static_sites:
+- name: static
+  source_dir: staticfiles
+  index_document: index.html
+  routes:
+  - path: /static
+
+# Domain configuration
+domains:
+- domain: your-domain.com
+  type: PRIMARY
+- domain: www.your-domain.com
+  type: ALIAS
