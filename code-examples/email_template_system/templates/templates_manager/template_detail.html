@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ template.name }} - Template Details{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">{{ template.name }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'template_preview' template.pk %}" class="btn btn-sm btn-outline-info">
+                <i class="bi bi-play"></i> Preview
+            </a>
+            <a href="{% url 'template_edit' template.pk %}" class="btn btn-sm btn-outline-warning">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a href="{% url 'template_delete' template.pk %}" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash"></i> Delete
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Template Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Name:</dt>
+                    <dd class="col-sm-9">{{ template.name }}</dd>
+
+                    <dt class="col-sm-3">Version:</dt>
+                    <dd class="col-sm-9"><span class="badge bg-secondary">v{{ template.version }}</span></dd>
+
+                    <dt class="col-sm-3">Status:</dt>
+                    <dd class="col-sm-9">
+                        {% if template.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-3">Description:</dt>
+                    <dd class="col-sm-9">{{ template.description|default:"No description" }}</dd>
+
+                    <dt class="col-sm-3">Created By:</dt>
+                    <dd class="col-sm-9">{{ template.created_by|default:"System" }}</dd>
+
+                    <dt class="col-sm-3">Created At:</dt>
+                    <dd class="col-sm-9">{{ template.created_at|date:"Y-m-d H:i:s" }}</dd>
+
+                    <dt class="col-sm-3">Updated At:</dt>
+                    <dd class="col-sm-9">{{ template.updated_at|date:"Y-m-d H:i:s" }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Email Subject</h5>
+            </div>
+            <div class="card-body">
+                <code>{{ template.subject }}</code>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>HTML Body</h5>
+            </div>
+            <div class="card-body">
+                <pre><code>{{ template.body_html }}</code></pre>
+            </div>
+        </div>
+
+        {% if template.body_plain %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Plain Text Body</h5>
+            </div>
+            <div class="card-body">
+                <pre>{{ template.body_plain }}</pre>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Detected Placeholders</h5>
+            </div>
+            <div class="card-body">
+                {% if placeholders %}
+                <ul class="list-group">
+                    {% for placeholder in placeholders %}
+                    <li class="list-group-item">
+                        <code>{% templatetag openvariable %}{% templatetag openvariable %} {{ placeholder }} {% templatetag closevariable %}{% templatetag closevariable %}</code>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">No placeholders detected</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5>Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'template_preview' template.pk %}" class="btn btn-primary">
+                        <i class="bi bi-play"></i> Preview Template
+                    </a>
+                    <a href="{% url 'template_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

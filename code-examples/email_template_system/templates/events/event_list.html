@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Event Types{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Event Types</h1>
+    <a href="{% url 'event_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Create Event Type
+    </a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Slug</th>
+                <th>Template</th>
+                <th>Trigger Method</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in events %}
+            <tr>
+                <td><strong>{{ event.name }}</strong></td>
+                <td><code>{{ event.slug }}</code></td>
+                <td>{{ event.template.name|default:"-" }}</td>
+                <td><span class="badge bg-info">{{ event.get_trigger_method_display }}</span></td>
+                <td>
+                    {% if event.is_active %}
+                    <span class="badge bg-success">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'event_detail' event.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                    <a href="{% url 'event_edit' event.pk %}" class="btn btn-sm btn-outline-warning">Edit</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">
+                    No event types found. <a href="{% url 'event_create' %}">Create one</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Placeholder{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">{{ action }} Placeholder</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post">
+            {% csrf_token %}
+            
+            {% for field in form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <small class="form-text text-muted">{{ field.help_text }}</small>
+                {% endif %}
+                {% if field.errors %}
+                <div class="text-danger">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{% url 'placeholder_list' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Placeholder</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
