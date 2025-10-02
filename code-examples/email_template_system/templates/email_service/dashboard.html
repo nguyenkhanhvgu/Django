@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1>Email Dashboard</h1>
+<div class="row">
+<div class="col-md-4"><div class="card"><div class="card-body"><h3>{{ stats.total_emails }}</h3><p>Total Emails</p></div></div></div>
+<div class="col-md-4"><div class="card"><div class="card-body"><h3>{{ stats.sent }}</h3><p>Sent</p></div></div></div>
+<div class="col-md-4"><div class="card"><div class="card-body"><h3>{{ stats.failed }}</h3><p>Failed</p></div></div></div>
+</div>
+{% endblock %}

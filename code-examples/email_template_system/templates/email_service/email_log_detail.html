@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Email Log #{{ log.id }}{% endblock %}
+{% block content %}
+<h1>Email Log #{{ log.id }}</h1>
+<p><strong>To:</strong> {{ log.recipient }}</p>
+<p><strong>Subject:</strong> {{ log.subject }}</p>
+<p><strong>Status:</strong> {{ log.delivery_status }}</p>
+<div class="card"><div class="card-body">{{ log.body_html|safe }}</div></div>
+<a href="{% url 'email_log_list' %}" class="btn btn-secondary">Back</a>
+{% endblock %}

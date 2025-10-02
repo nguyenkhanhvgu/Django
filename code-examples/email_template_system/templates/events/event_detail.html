@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}{{ event.name }}{% endblock %}
+{% block content %}
+<h1>{{ event.name }}</h1>
+<p>{{ event.description }}</p>
+<p><strong>Template:</strong> {{ event.template.name|default:"Not set" }}</p>
+<a href="{% url 'event_edit' event.pk %}" class="btn btn-warning">Edit</a>
+<a href="{% url 'event_list' %}" class="btn btn-secondary">Back</a>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Template{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">{{ action }} Email Template</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="{{ form.name.id_for_label }}" class="form-label">Template Name *</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <div class="text-danger">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.subject.id_for_label }}" class="form-label">Email Subject *</label>
+                {{ form.subject }}
+                <small class="form-text text-muted">Use {{PlaceholderName}} for dynamic content</small>
+                {% if form.subject.errors %}
+                    <div class="text-danger">{{ form.subject.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.body_html.id_for_label }}" class="form-label">HTML Body *</label>
+                {{ form.body_html }}
+                <small class="form-text text-muted">HTML email body with {{PlaceholderName}} support</small>
+                {% if form.body_html.errors %}
+                    <div class="text-danger">{{ form.body_html.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.body_plain.id_for_label }}" class="form-label">Plain Text Body</label>
+                {{ form.body_plain }}
+                <small class="form-text text-muted">Optional plain text version</small>
+                {% if form.body_plain.errors %}
+                    <div class="text-danger">{{ form.body_plain.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="text-danger">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3 form-check">
+                {{ form.is_active }}
+                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                    Active
+                </label>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{% url 'template_list' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Template</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Available Placeholders</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Click to copy to clipboard:</p>
+                <div class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action" onclick="copyToClipboard('{{CustomerName}}'); return false;">
+                        {{CustomerName}}
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="copyToClipboard('{{Email}}'); return false;">
+                        {{Email}}
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="copyToClipboard('{{Date}}'); return false;">
+                        {{Date}}
+                    </a>
+                </div>
+                <p class="mt-3"><a href="{% url 'placeholder_list' %}">View all placeholders</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        alert('Copied: ' + text);
+    });
+}
+</script>
+{% endblock %}

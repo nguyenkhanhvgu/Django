@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Preview: {{ template.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Preview: {{ template.name }}</h1>
+    <a href="{% url 'template_detail' template.pk %}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <h4>Test Data</h4>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field }}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Generate Preview</button>
+        </form>
+    </div>
+
+    <div class="col-md-6">
+        {% if preview_data %}
+        <h4>Preview Result</h4>
+        
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <strong>Subject:</strong> {{ preview_data.subject }}
+            </div>
+            <div class="card-body">
+                <h5>HTML Version</h5>
+                <div class="border p-3">
+                    {{ preview_data.body_html|safe }}
+                </div>
+                
+                {% if preview_data.body_plain %}
+                <hr>
+                <h5>Plain Text Version</h5>
+                <pre class="border p-3">{{ preview_data.body_plain }}</pre>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            Fill in the test data and click "Generate Preview" to see the rendered template.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

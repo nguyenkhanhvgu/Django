@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Event Triggers{% endblock %}
+{% block content %}
+<h1>Event Triggers</h1>
+<table class="table">
+<thead><tr><th>Event</th><th>Status</th><th>Triggered At</th></tr></thead>
+<tbody>
+{% for trigger in triggers %}
+<tr><td>{{ trigger.event_type.name }}</td><td>{{ trigger.status }}</td><td>{{ trigger.triggered_at }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+{% endblock %}

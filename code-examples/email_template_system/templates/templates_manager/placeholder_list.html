@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Placeholders{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Placeholders</h1>
+    <a href="{% url 'placeholder_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Create Placeholder
+    </a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Example</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for placeholder in placeholders %}
+            <tr>
+                <td><code>{% templatetag openvariable %}{% templatetag openvariable %} {{ placeholder.name }} {% templatetag closevariable %}{% templatetag closevariable %}</code></td>
+                <td>{{ placeholder.description|truncatewords:10 }}</td>
+                <td><span class="badge bg-info">{{ placeholder.data_type }}</span></td>
+                <td>
+                    {% if placeholder.is_required %}
+                    <span class="badge bg-warning">Required</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Optional</span>
+                    {% endif %}
+                </td>
+                <td>{{ placeholder.example_value|default:"-" }}</td>
+                <td>
+                    <a href="{% url 'placeholder_edit' placeholder.pk %}" class="btn btn-sm btn-outline-warning">Edit</a>
+                    <a href="{% url 'placeholder_delete' placeholder.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">
+                    No placeholders found. <a href="{% url 'placeholder_create' %}">Create one</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

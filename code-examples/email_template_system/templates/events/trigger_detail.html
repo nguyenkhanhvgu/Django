@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block title %}Trigger Details{% endblock %}
+{% block content %}
+<h1>Trigger #{{ trigger.id }}</h1>
+<p><strong>Event:</strong> {{ trigger.event_type.name }}</p>
+<p><strong>Status:</strong> {{ trigger.status }}</p>
+<a href="{% url 'trigger_list' %}" class="btn btn-secondary">Back</a>
+{% endblock %}

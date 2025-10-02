@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Email Template System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-header">Email Templates</div>
+            <div class="card-body">
+                <h5 class="card-title">{{ total_templates }}</h5>
+                <p class="card-text">Active templates</p>
+                <a href="{% url 'template_list' %}" class="btn btn-light btn-sm">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-header">Placeholders</div>
+            <div class="card-body">
+                <h5 class="card-title">{{ total_placeholders }}</h5>
+                <p class="card-text">Defined placeholders</p>
+                <a href="{% url 'placeholder_list' %}" class="btn btn-light btn-sm">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-header">Events</div>
+            <div class="card-body">
+                <h5 class="card-title">Active</h5>
+                <p class="card-text">Event types configured</p>
+                <a href="{% url 'event_list' %}" class="btn btn-light btn-sm">View All</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <h3>Recent Templates</h3>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Subject</th>
+                        <th>Version</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for template in recent_templates %}
+                    <tr>
+                        <td>{{ template.name }}</td>
+                        <td>{{ template.subject|truncatewords:10 }}</td>
+                        <td>v{{ template.version }}</td>
+                        <td>{{ template.created_at|date:"Y-m-d" }}</td>
+                        <td>
+                            <a href="{% url 'template_detail' template.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No templates yet. <a href="{% url 'template_create' %}">Create one</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <h3>Quick Actions</h3>
+        <div class="list-group">
+            <a href="{% url 'template_create' %}" class="list-group-item list-group-item-action">
+                <i class="bi bi-plus-circle"></i> Create New Template
+            </a>
+            <a href="{% url 'placeholder_create' %}" class="list-group-item list-group-item-action">
+                <i class="bi bi-plus-circle"></i> Create New Placeholder
+            </a>
+            <a href="{% url 'event_create' %}" class="list-group-item list-group-item-action">
+                <i class="bi bi-plus-circle"></i> Create New Event Type
+            </a>
+            <a href="{% url 'email_log_list' %}" class="list-group-item list-group-item-action">
+                <i class="bi bi-envelope"></i> View Email Logs
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
